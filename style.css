@@ -95,11 +95,14 @@ section {
     text-align: left;
     line-height: 2.2;
 }
+.invitation-names p {
+    margin: 0;
+}
 .invitation-names span {
     color: #888;
     font-size: 0.9rem;
     display: inline-block;
-    width: 80px;
+    width: 100px;
 }
 
 
@@ -124,19 +127,36 @@ section {
 }
 
 /* 위치 */
-.location__map {
-    border-radius: 8px;
-    overflow: hidden;
-    margin-bottom: 1.5rem;
-}
-.location__info p {
+.location__info {
     line-height: 1.8;
 }
 .location__info strong {
-    display: block;
+    font-family: var(--font-heading);
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+.location__info p {
     margin-top: 0.5rem;
 }
-
+.location__buttons {
+    margin-top: 1.5rem;
+}
+.btn-map {
+    display: inline-block;
+    font-family: var(--font-body);
+    text-decoration: none;
+    padding: 0.8rem 1.5rem;
+    border: 1px solid var(--primary-color);
+    background: var(--primary-color);
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.btn-map:hover {
+    background: #c5a394;
+    border-color: #c5a394;
+}
 
 /* 마음 전하실 곳 */
 .gift { background-color: var(--bg-color); }
@@ -196,7 +216,7 @@ section {
     transition: background-color 0.3s;
 }
 .comment-form button:hover { background: #4a332a; }
-.comment-form button:disabled { background: #ccc; }
+.comment-form button:disabled { background: #ccc; cursor: not-allowed; }
 
 .comment-list {
     text-align: left;
@@ -214,7 +234,29 @@ section {
     font-size: 0.9rem;
 }
 .comment-header strong { font-size: 1rem; }
-.comment-header span { color: #999; font-size: 0.8rem; }
+.comment-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.comment-meta span { color: #999; font-size: 0.8rem; }
+.btn-delete {
+    background: none;
+    border: 1px solid #ddd;
+    color: #999;
+    font-family: var(--font-body);
+    font-size: 0.7rem;
+    padding: 2px 5px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.btn-delete:hover {
+    background: var(--text-color);
+    color: white;
+    border-color: var(--text-color);
+}
+
 .comment-body {
     font-size: 0.95rem;
     line-height: 1.6;

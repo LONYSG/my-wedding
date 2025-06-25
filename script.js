@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- 설정 (Configuration) ---
-    const GUESTBOOK_API_URL = 'https://script.google.com/macros/s/AKfycbyADY8m-uks8AE6xg8olxg5gy8ZF2bVs5hFIZFwruHa1CBHMf-XFaxoSBo8acjc6WpE/exec';
+    const GUESTBOOK_API_URL = 'https://script.google.com/macros/s/AKfycbx_iBWQ_Hv07HI4AFX52hX_htUqzFq7pDvCHXL_ZTZZGQt7Y0TU49Xc_pj7Kq493l4f/exec';
     const COMMENTS_PER_PAGE = 5;
 
     // --- DOM 요소 ---
@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target === lightboxModal) closeLightbox();
     });
 
-    // 댓글 렌더링
+    // 댓글 렌더링 (삭제 버튼 추가)
     function renderComments() {
         commentList.innerHTML = '';
         const startIndex = (currentPage - 1) * COMMENTS_PER_PAGE;
@@ -65,15 +65,20 @@ document.addEventListener('DOMContentLoaded', () => {
             commentList.innerHTML = '<p style="text-align:center; padding: 2rem 0; color:#999;">아직 등록된 축하 메시지가 없습니다. 첫 번째 메시지를 남겨주세요!</p>';
             return;
         }
+        
         commentsToRender.forEach(comment => {
             const item = document.createElement('div');
             item.className = 'comment-item';
             const date = new Date(comment.timestamp);
             const formattedDate = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+            
             item.innerHTML = `
                 <div class="comment-header">
                     <strong>${escapeHtml(comment.name)}</strong>
-                    <span>${formattedDate}</span>
+                    <div class="comment-meta">
+                        <span>${formattedDate}</span>
+                        <button class="btn-delete" data-row-index="${comment.rowIndex}">삭제</button>
+                    </div>
                 </div>
                 <p class="comment-body">${escapeHtml(comment.content)}</p>
             `;
@@ -110,7 +115,11 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch(GUESTBOOK_API_URL);
             const data = await response.json();
-            allComments = data.comments || [];
+            if (data.result === 'success') {
+                allComments = data.comments || [];
+            } else {
+                throw new Error(data.message);
+            }
         } catch (error) {
             console.error("댓글 로딩 실패:", error);
             commentList.innerHTML = '<p style="text-align:center; padding: 2rem 0; color:red;">댓글을 불러오는 중 오류가 발생했습니다.</p>';
@@ -142,42 +151,90 @@ document.addEventListener('DOMContentLoaded', () => {
             submitButton.disabled = true;
             submitButton.innerText = '등록 중...';
 
-            await fetch(GUESTBOOK_API_URL, {
+            const response = await fetch(GUESTBOOK_API_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newComment),
-                mode: 'no-cors' // doPost는 no-cors로 호출해도 잘 동작합니다.
             });
-            
-            alert('소중한 메시지가 등록되었습니다. 감사합니다!');
-            commentForm.reset();
-            fetchComments(); // 목록 새로고침
 
+            const result = await response.json();
+
+            if (result.result === 'success') {
+                alert('소중한 메시지가 등록되었습니다. 감사합니다!');
+                commentForm.reset();
+                fetchComments();
+            } else {
+                throw new Error(result.message || '알 수 없는 오류');
+            }
         } catch (error) {
             console.error("댓글 등록 실패:", error);
-            alert("댓글 등록 중 오류가 발생했습니다.");
+            alert("댓글 등록 중 오류가 발생했습니다: " + error.message);
         } finally {
             submitButton.disabled = false;
             submitButton.innerText = '글 남기기';
         }
     }
 
-    // HTML 태그 이스케이프 (XSS 방지)
-    function escapeHtml(text) {
-        // 만약 text가 문자열이 아니면(예: 비어 있거나 숫자일 경우) 빈 문자열로 바꿔줍니다.
-        const safeText = String(text || '');
+    // 댓글 삭제 기능
+    async function handleDeleteComment(deleteButton) {
+        const rowIndex = deleteButton.getAttribute('data-row-index');
+        const password = prompt('댓글 작성 시 입력했던 비밀번호를 입력하세요.');
 
-        const map = {
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#039;'
+        if (password === null) return;
+
+        if (!password) {
+            alert('비밀번호를 입력해야 삭제할 수 있습니다.');
+            return;
+        }
+
+        const deleteRequest = {
+            action: 'delete',
+            rowIndex: rowIndex,
+            password: password
         };
-        return safeText.replace(/[&<>"']/g, function(m) { return map[m]; });
+        
+        try {
+            deleteButton.innerText = '삭제 중...';
+            deleteButton.disabled = true;
+
+            const response = await fetch(GUESTBOOK_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(deleteRequest),
+            });
+
+            const result = await response.json();
+
+            if (result.result === 'success') {
+                alert(result.message);
+                fetchComments();
+            } else {
+                throw new Error(result.message || '알 수 없는 오류');
+            }
+        } catch (error) {
+            console.error("삭제 실패:", error);
+            alert("삭제 중 오류가 발생했습니다: " + error.message);
+        } finally {
+             // finally에서는 버튼을 다시 활성화하지 않습니다. 어차피 목록이 새로고침되면서 버튼이 다시 그려지기 때문입니다.
+        }
     }
 
-    // --- 초기화 (Initialization) ---
+    // HTML 태그 이스케이프 (XSS 방지)
+    function escapeHtml(text) {
+        const safeText = String(text || '');
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+        return safeText.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    // --- 이벤트 리스너 (Event Listeners) ---
     commentForm.addEventListener('submit', handleFormSubmit);
+
+    commentList.addEventListener('click', function(e) {
+        if (e.target && e.target.classList.contains('btn-delete')) {
+            handleDeleteComment(e.target);
+        }
+    });
+
+    // --- 초기화 (Initialization) ---
     fetchComments();
 });
