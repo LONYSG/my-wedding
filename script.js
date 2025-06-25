@@ -1,8 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- 설정 (Configuration) ---
-    // TODO: Google Apps Script 배포 후 받은 URL을 여기에 붙여넣으세요.
-    const GUESTBOOK_API_URL = 'https://script.google.com/macros/s/AKfycbxb8d0Z2Pn4mZkK5KfBWMYo5XnteCIXyvhPobQxsItsfsbDJ1GymaUtB3J_VMtlrWaW/exec';
+    // --- 설정2 (Configuration) ---
+    const GUESTBOOK_API_URL = 'https://script.google.com/macros/s/AKfycbzvF4s62ovT8opkbf-DuRy1y43EDcO-BqScF3ULtf7Dr1FCEFCWGTTU-FICr6Sberw9/exec';
     const COMMENTS_PER_PAGE = 5;
 
     // --- DOM 요소 ---
