@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- 설정2 (Configuration) ---
-    const GUESTBOOK_API_URL = 'https://script.google.com/macros/s/AKfycbzvF4s62ovT8opkbf-DuRy1y43EDcO-BqScF3ULtf7Dr1FCEFCWGTTU-FICr6Sberw9/exec';
+    // --- 설정 (Configuration) ---
+    const GUESTBOOK_API_URL = 'https://script.google.com/macros/s/AKfycbyADY8m-uks8AE6xg8olxg5gy8ZF2bVs5hFIZFwruHa1CBHMf-XFaxoSBo8acjc6WpE/exec';
     const COMMENTS_PER_PAGE = 5;
 
     // --- DOM 요소 ---
