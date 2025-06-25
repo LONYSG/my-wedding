@@ -1,11 +1,17 @@
+/* ★★★ 눈누(Noonnu)를 통해 글자 깨짐 없는 폰트를 불러옵니다 ★★★ */
+@import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/MaruBuri-Regular.woff');
+@import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/GowunDodum-Regular.woff');
+
+
 /* 기본 스타일 & CSS 변수 */
 :root {
     --bg-color: #FFF8F0;
     --text-color: #5D4037;
     --primary-color: #D4B2A3;
     --secondary-color: #EAE0D5;
-    --font-heading: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
-    --font-body: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+    /* ★★★ 폰트 변수를 다시 '마루 부리'와 '고운 돋움'으로 변경 ★★★ */
+    --font-heading: 'MaruBuri-Regular', serif;
+    --font-body: 'GowunDodum-Regular', sans-serif;
 }
 
 * {
@@ -31,7 +37,7 @@ body {
 
 h2 {
     font-family: var(--font-heading);
-    font-weight: 600; /* 제목은 조금 더 굵게 */
+    font-weight: normal; /* MaruBuri는 자체 굵기가 있으므로 normal로 설정 */
     font-size: 1.8rem;
     margin-bottom: 1.5rem;
     color: var(--text-color);
