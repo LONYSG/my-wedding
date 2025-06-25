@@ -4,8 +4,8 @@
     --text-color: #5D4037;
     --primary-color: #D4B2A3;
     --secondary-color: #EAE0D5;
-    --font-heading: 'Maru Buri', serif;
-    --font-body: 'Gowun Dodum', sans-serif;
+    --font-heading: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+    --font-body: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
 }
 
 * {
@@ -20,18 +20,18 @@ body {
     color: var(--text-color);
     text-align: center;
     -webkit-font-smoothing: antialiased;
+    font-weight: 400;
 }
 
 .container {
     max-width: 640px;
     margin: 0 auto;
     background-color: white;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
 }
 
 h2 {
     font-family: var(--font-heading);
-    font-weight: 400;
+    font-weight: 600; /* 제목은 조금 더 굵게 */
     font-size: 1.8rem;
     margin-bottom: 1.5rem;
     color: var(--text-color);
@@ -190,14 +190,12 @@ section {
     bottom: 10px;
     left: 50%;
     transform: translateX(-50%);
-    background-color: rgba(0, 0, 0, 0.2);
+    background-color: rgba(0, 0, 0, 0.25); /* 블러 효과 대신 배경색 명도만 살짝 조절 */
     padding: 8px 12px;
     border-radius: 20px;
     display: flex;
     gap: 10px;
     z-index: 10;
-    backdrop-filter: blur(2px);
-    -webkit-backdrop-filter: blur(2px);
 }
 .dot {
     width: 8px;
@@ -286,7 +284,11 @@ section {
     border: 1px solid var(--secondary-color);
 }
 .account h3 { font-family: var(--font-heading); margin-bottom: 0.8rem; }
-.account p { font-size: 0.95rem; margin-bottom: 1rem; }
+.account p {
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
 .btn-copy {
     font-family: var(--font-body);
     padding: 0.6rem 1rem;
@@ -457,4 +459,15 @@ section {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+
+/* ★★★ 반응형 웹 디자인: PC 화면을 위한 깔끔한 스타일 ★★★ */
+@media (min-width: 768px) {
+    .container {
+        /* PC에서 보기 좋도록 위아래 여백과 은은한 그림자를 줍니다. */
+        margin: 3rem auto;
+        border-radius: 8px;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.07);
+    }
 }

@@ -1,26 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- 설정 (Configuration) ---
+    // TODO: Google Apps Script 배포 후 받은 '기존' URL을 여기에 붙여넣으세요.
     const GUESTBOOK_API_URL = 'https://script.google.com/macros/s/AKfycbx_iBWQ_Hv07HI4AFX52hX_htUqzFq7pDvCHXL_ZTZZGQt7Y0TU49Xc_pj7Kq493l4f/exec';
     const COMMENTS_PER_PAGE = 5;
 
-    // --- 결혼식 정보 (캘린더, 길찾기용) ---
-    const weddingInfo = {
-        title: "건영 ♥ 서윤 결혼식",
-        // TODO: 날짜와 시간을 "YYYY-MM-DD HH:MM" 형식으로 입력 (24시간 기준)
-        start: "2025-10-25 14:00", 
-        end: "2025-10-25 15:30",
-        locationName: "메리빌리아더프레스티지",
-        locationAddress: "경기 수원시 팔달구 월드컵로 310",
-        lat: 37.284244,
-        lng: 127.020111,
-        description: "건영과 서윤의 결혼식에 오셔서 자리를 빛내주시길 바랍니다."
-    };
-
     // --- DOM 요소 ---
-    const addToCalendarBtn = document.getElementById('add-to-calendar-btn');
-    const kakaomapDirectionBtn = document.getElementById('kakaomap-direction-btn');
-    const navermapDirectionBtn = document.getElementById('navermap-direction-btn');
     const commentForm = document.getElementById('comment-form');
     const commentList = document.getElementById('comment-list');
     const paginationContainer = document.getElementById('pagination');
@@ -135,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     moveTo(0, false);
                 }
             });
-
+            
             nextButton.addEventListener('click', handleNext);
             prevButton.addEventListener('click', handlePrev);
             
@@ -200,58 +185,6 @@ document.addEventListener('DOMContentLoaded', () => {
     lightboxModal.addEventListener('click', (e) => {
         if (e.target === lightboxModal) closeLightbox();
     });
-
-    // 캘린더 기능
-    if(addToCalendarBtn) {
-        addToCalendarBtn.addEventListener('click', () => {
-            const toICSFormat = (dateStr) => {
-                const date = new Date(dateStr);
-                const timezoneOffset = date.getTimezoneOffset() * 60000;
-                const dateInKST = new Date(date.getTime() - timezoneOffset);
-                return dateInKST.toISOString().replace(/-|:|\.\d+/g, "");
-            };
-            const icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nUID:${new Date().getTime()}@my-wedding.com\nDTSTAMP:${toICSFormat(new Date().toString())}\nDTSTART;TZID=Asia/Seoul:${toICSFormat(weddingInfo.start)}\nDTEND;TZID=Asia/Seoul:${toICSFormat(weddingInfo.end)}\nSUMMARY:${weddingInfo.title}\nDESCRIPTION:${weddingInfo.description}\nLOCATION:${weddingInfo.locationAddress}\nEND:VEVENT\nEND:VCALENDAR`;
-            const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'wedding.ics';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        });
-    }
-
-    // 길찾기 기능
-    if (kakaomapDirectionBtn && navermapDirectionBtn) {
-        const getDirections = (mapType) => {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition((position) => {
-                    const { latitude, longitude } = position.coords;
-                    let url = '';
-                    if (mapType === 'kakao') {
-                        url = `https://map.kakao.com/link/to/${weddingInfo.locationName},${weddingInfo.lat},${weddingInfo.lng}`;
-                    } else if (mapType === 'naver') {
-                        url = `https://map.naver.com/v5/directions/${longitude},${latitude},현위치/${weddingInfo.lng},${weddingInfo.lat},${weddingInfo.locationName}/transit`;
-                    }
-                    window.open(url, '_blank');
-                }, (error) => {
-                    console.error(error);
-                    alert('위치 정보를 가져올 수 없습니다. 목적지만 표시할게요.');
-                    let fallbackUrl = '';
-                     if (mapType === 'kakao') {
-                        fallbackUrl = `https://map.kakao.com/link/map/${weddingInfo.locationName},${weddingInfo.lat},${weddingInfo.lng}`;
-                    } else if (mapType === 'naver') {
-                        fallbackUrl = `https://map.naver.com/v5/search/${weddingInfo.locationName}`;
-                    }
-                    window.open(fallbackUrl, '_blank');
-                });
-            } else {
-                alert('이 브라우저에서는 위치 정보 기능을 지원하지 않습니다.');
-            }
-        };
-        kakaomapDirectionBtn.addEventListener('click', () => getDirections('kakao'));
-        navermapDirectionBtn.addEventListener('click', () => getDirections('naver'));
-    }
 
     // 댓글 렌더링
     function renderComments() {
