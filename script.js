@@ -9,11 +9,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const commentList = document.getElementById('comment-list');
     const paginationContainer = document.getElementById('pagination');
     const submitButton = document.getElementById('submit-button');
+    const loaderContainer = document.getElementById('loader-container'); // ★★★ 이 줄 추가 ★★★
     const copyButtons = document.querySelectorAll('.btn-copy');
     const galleryItems = document.querySelectorAll('.gallery__item img');
     const lightboxModal = document.getElementById('lightbox-modal');
     const lightboxImage = document.getElementById('lightbox-image');
     const lightboxClose = document.querySelector('.lightbox-close');
+    // in script.js
 
     // --- 상태 관리 (State) ---
     let allComments = [];
@@ -106,12 +108,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 댓글 불러오기 (Fetch)
     async function fetchComments() {
+        // ★★★ 로딩 시작 ★★★
+        loaderContainer.style.display = 'flex'; // 로더 보이기
+        commentList.style.display = 'none';     // 기존 댓글 목록 숨기기
+        paginationContainer.style.display = 'none'; // 기존 페이지 버튼 숨기기
+
         if (!GUESTBOOK_API_URL.startsWith('https://')) {
             console.warn("방명록 API 주소가 설정되지 않았습니다.");
-            renderComments();
-            setupPagination();
+            loaderContainer.style.display = 'none'; // 로더 숨기기
+            renderComments(); // 비어있는 상태로 렌더링
             return;
         }
+
         try {
             const response = await fetch(GUESTBOOK_API_URL);
             const data = await response.json();
@@ -124,6 +132,11 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("댓글 로딩 실패:", error);
             commentList.innerHTML = '<p style="text-align:center; padding: 2rem 0; color:red;">댓글을 불러오는 중 오류가 발생했습니다.</p>';
         } finally {
+            // ★★★ 로딩 종료 ★★★
+            // 성공하든 실패하든 항상 실행되는 부분
+            loaderContainer.style.display = 'none';    // 로더 숨기기
+            commentList.style.display = 'block';     // 댓글 목록 보이기
+            paginationContainer.style.display = 'flex'; // 페이지 버튼 보이기
             renderComments();
             setupPagination();
         }
