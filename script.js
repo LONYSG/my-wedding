@@ -164,8 +164,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // HTML 태그 이스케이프 (XSS 방지)
     function escapeHtml(text) {
-        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-        return text.replace(/[&<>"']/g, m => map[m]);
+        // 만약 text가 문자열이 아니면(예: 비어 있거나 숫자일 경우) 빈 문자열로 바꿔줍니다.
+        const safeText = String(text || '');
+
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return safeText.replace(/[&<>"']/g, function(m) { return map[m]; });
     }
 
     // --- 초기화 (Initialization) ---
