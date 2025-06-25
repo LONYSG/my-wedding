@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const submitButton = document.getElementById('submit-button');
     const loaderContainer = document.getElementById('loader-container');
     const copyButtons = document.querySelectorAll('.btn-copy');
-    const galleryItems = document.querySelectorAll('.gallery__item img');
     const lightboxModal = document.getElementById('lightbox-modal');
     const lightboxImage = document.getElementById('lightbox-image');
     const lightboxClose = document.querySelector('.lightbox-close');
@@ -31,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }, { threshold: 0.1 });
     document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
-
+    
     // 클립보드 복사
     copyButtons.forEach(button => {
         button.addEventListener('click', (e) => {
@@ -42,13 +41,81 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 갤러리 라이트박스
-    galleryItems.forEach(img => {
-        img.addEventListener('click', () => {
-            lightboxModal.style.display = 'flex';
-            lightboxImage.src = img.src;
+    // 가로 스크롤 갤러리 (터치 스와이프 포함)
+    const galleryContainer = document.querySelector('.gallery-container');
+    if (galleryContainer) { // 갤러리 요소가 있을 때만 실행
+        const galleryWrapper = document.querySelector('.gallery-wrapper');
+        const gallerySlides = document.querySelectorAll('.gallery-slide');
+        const prevButton = document.getElementById('gallery-prev');
+        const nextButton = document.getElementById('gallery-next');
+        let currentIndex = 0;
+        const slideCount = gallerySlides.length;
+        let touchStartX = 0;
+        let isDragging = false;
+
+        function showSlide(index) {
+            if (index >= slideCount) {
+                currentIndex = 0;
+            } else if (index < 0) {
+                currentIndex = slideCount - 1;
+            } else {
+                currentIndex = index;
+            }
+            const offset = -currentIndex * 100;
+            galleryWrapper.style.transform = `translateX(${offset}%)`;
+        }
+
+        function handleTouchStart(e) {
+            isDragging = false;
+            touchStartX = e.touches[0].clientX;
+        }
+
+        function handleTouchMove(e) {
+            if (touchStartX === 0) return;
+            const touchEndX = e.touches[0].clientX;
+            // 스와이프 중임을 판단하기 위해 isDragging을 즉시 true로 설정
+            if (Math.abs(touchStartX - touchEndX) > 10) { // 약간의 움직임에도 드래그로 간주
+                 isDragging = true;
+            }
+        }
+
+        function handleTouchEnd(e) {
+            if (touchStartX === 0) return;
+            const touchEndX = e.changedTouches[0].clientX;
+            const swipeDistance = touchStartX - touchEndX;
+            const swipeThreshold = 50;
+
+            if (swipeDistance > swipeThreshold) {
+                showSlide(currentIndex + 1);
+            } else if (swipeDistance < -swipeThreshold) {
+                showSlide(currentIndex - 1);
+            }
+            
+            touchStartX = 0; // 초기화
+            // isDragging을 false로 리셋하여 다음 클릭 이벤트를 위해 준비
+            // 바로 false로 바꾸면 click 이벤트가 먼저 실행될 수 있어 약간의 딜레이를 줌
+            setTimeout(() => { isDragging = false; }, 100);
+        }
+
+        prevButton.addEventListener('click', () => showSlide(currentIndex - 1));
+        nextButton.addEventListener('click', () => showSlide(currentIndex + 1));
+        galleryContainer.addEventListener('touchstart', handleTouchStart, { passive: true });
+        galleryContainer.addEventListener('touchmove', handleTouchMove, { passive: true });
+        galleryContainer.addEventListener('touchend', handleTouchEnd);
+        
+        gallerySlides.forEach(slide => {
+            slide.querySelector('img').addEventListener('click', (e) => {
+                if (isDragging) {
+                    e.preventDefault(); // 스와이프 후 클릭 방지
+                    return;
+                }
+                lightboxModal.style.display = 'flex';
+                lightboxImage.src = e.target.src;
+            });
         });
-    });
+    }
+    
+    // 라이트박스 닫기
     const closeLightbox = () => lightboxModal.style.display = 'none';
     lightboxClose.addEventListener('click', closeLightbox);
     lightboxModal.addEventListener('click', (e) => {
@@ -105,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // (수정) 댓글 불러오기 (Fetch) - 로딩 로직 수정
+    // 댓글 불러오기 (Fetch) - 로딩 로직 수정
     async function fetchComments() {
         loaderContainer.style.display = 'flex';
         commentList.style.display = 'none';
@@ -121,7 +188,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             if (data.result === 'success') {
                 allComments = data.comments || [];
-                // 성공했을 때만 여기서 렌더링
                 renderComments();
                 setupPagination();
             } else {
@@ -131,7 +197,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("댓글 로딩 실패:", error);
             commentList.innerHTML = `<p style="text-align:center; padding: 2rem 0; color:red;">댓글을 불러오는 중 오류가 발생했습니다.<br>${error.message}</p>`;
         } finally {
-            // 성공하든 실패하든 항상 실행
             loaderContainer.style.display = 'none';
             commentList.style.display = 'block';
             paginationContainer.style.display = 'flex';
@@ -160,7 +225,6 @@ document.addEventListener('DOMContentLoaded', () => {
             submitButton.disabled = true;
             submitButton.innerText = '등록 중...';
             
-            // preflight을 발생시키지 않는 text/plain 타입을 사용합니다.
             const response = await fetch(GUESTBOOK_API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -173,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (result.result === 'success') {
                 alert('소중한 메시지가 등록되었습니다. 감사합니다!');
                 commentForm.reset();
-                fetchComments(); // 성공 후 목록 새로고침
+                fetchComments();
             } else {
                 throw new Error(result.message || '알 수 없는 오류');
             }
@@ -225,7 +289,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error("삭제 실패:", error);
             alert("삭제 중 오류가 발생했습니다: " + error.message);
-            // 에러가 나면 버튼을 원래대로 되돌립니다.
             deleteButton.innerText = '삭제';
             deleteButton.disabled = false;
         }
