@@ -84,6 +84,33 @@ section {
     line-height: 1.6;
 }
 
+/* 캘린더 추가 버튼 */
+.calendar-buttons {
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+}
+.btn-calendar {
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    background-color: transparent;
+    color: var(--text-color);
+    border: 1px solid var(--secondary-color);
+    padding: 0.7rem 1.2rem;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 80%;
+    max-width: 300px;
+}
+.btn-calendar:hover {
+    background-color: var(--secondary-color);
+    border-color: var(--primary-color);
+}
+
+
 /* 초대 문구 */
 .invitation-text p {
     font-size: 1rem;
@@ -160,20 +187,25 @@ section {
 }
 .gallery-dots {
     position: absolute;
-    bottom: 15px;
+    bottom: 10px;
     left: 50%;
     transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 8px 12px;
+    border-radius: 20px;
     display: flex;
-    gap: 8px;
+    gap: 10px;
     z-index: 10;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
 }
 .dot {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     background-color: rgba(255, 255, 255, 0.5);
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: all 0.4s ease;
     border: none;
     padding: 0;
 }
@@ -182,8 +214,14 @@ section {
 }
 .dot.active {
     background-color: white;
+    transform: scale(1.2);
 }
 
+@media (hover: none) and (pointer: coarse) {
+    .gallery-nav {
+        display: none;
+    }
+}
 
 /* 위치 */
 .location__info {
@@ -210,20 +248,25 @@ section {
 }
 .location__buttons {
     margin-top: 1.5rem;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
 }
-.btn-map {
-    display: inline-block;
+.btn-direction {
     font-family: var(--font-body);
     text-decoration: none;
-    padding: 0.8rem 1.5rem;
+    padding: 0.8rem 1rem;
     border: 1px solid var(--primary-color);
     background: var(--primary-color);
     color: white;
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.3s;
+    font-size: 1rem;
+    flex-grow: 1;
+    max-width: 250px;
 }
-.btn-map:hover {
+.btn-direction:hover {
     background: #c5a394;
     border-color: #c5a394;
 }

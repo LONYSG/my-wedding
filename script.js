@@ -4,7 +4,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const GUESTBOOK_API_URL = 'https://script.google.com/macros/s/AKfycbx_iBWQ_Hv07HI4AFX52hX_htUqzFq7pDvCHXL_ZTZZGQt7Y0TU49Xc_pj7Kq493l4f/exec';
     const COMMENTS_PER_PAGE = 5;
 
+    // --- 결혼식 정보 (캘린더, 길찾기용) ---
+    const weddingInfo = {
+        title: "건영 ♥ 서윤 결혼식",
+        // TODO: 날짜와 시간을 "YYYY-MM-DD HH:MM" 형식으로 입력 (24시간 기준)
+        start: "2025-10-25 14:00", 
+        end: "2025-10-25 15:30",
+        locationName: "메리빌리아더프레스티지",
+        locationAddress: "경기 수원시 팔달구 월드컵로 310",
+        lat: 37.284244,
+        lng: 127.020111,
+        description: "건영과 서윤의 결혼식에 오셔서 자리를 빛내주시길 바랍니다."
+    };
+
     // --- DOM 요소 ---
+    const addToCalendarBtn = document.getElementById('add-to-calendar-btn');
+    const kakaomapDirectionBtn = document.getElementById('kakaomap-direction-btn');
+    const navermapDirectionBtn = document.getElementById('navermap-direction-btn');
     const commentForm = document.getElementById('comment-form');
     const commentList = document.getElementById('comment-list');
     const paginationContainer = document.getElementById('pagination');
@@ -50,154 +66,132 @@ document.addEventListener('DOMContentLoaded', () => {
         const nextButton = document.getElementById('gallery-next');
         const dotsContainer = document.getElementById('gallery-dots');
         
-        let currentIndex = 0;
         let realSlideCount = slides.length;
-        let autoSlideInterval = null;
-        let isTransitioning = false;
-        let touchStartX = 0;
-        let isDragging = false;
+        if (realSlideCount > 0) {
+            let currentIndex = 0; // 0-based index for the real slides
+            let currentSlideIndexWithClones = 1; // 1-based index for the wrapper with clones
+            let autoSlideInterval = null;
+            let isTransitioning = false;
+            let touchStartX = 0;
+            let isDragging = false;
 
-        // 무한 루프를 위한 클론 생성
-        const firstClone = slides[0].cloneNode(true);
-        const lastClone = slides[realSlideCount - 1].cloneNode(true);
-        galleryWrapper.appendChild(firstClone);
-        galleryWrapper.insertBefore(lastClone, slides[0]);
+            // 무한 루프를 위한 클론 생성
+            const firstClone = slides[0].cloneNode(true);
+            const lastClone = slides[realSlideCount - 1].cloneNode(true);
+            galleryWrapper.appendChild(firstClone);
+            galleryWrapper.insertBefore(lastClone, slides[0]);
 
-        // 인디케이터(점) 생성
-        for (let i = 0; i < realSlideCount; i++) {
-            const dot = document.createElement('button');
-            dot.classList.add('dot');
-            dot.setAttribute('data-index', i);
-            dotsContainer.appendChild(dot);
-        }
-        const dots = document.querySelectorAll('.dot');
-        
-        // 초기 위치 설정 (애니메이션 없이)
-        let currentSlideIndex = 1; // 클론 포함한 인덱스
-        galleryWrapper.style.transform = `translateX(-${currentSlideIndex * 100}%)`;
-        dots[0].classList.add('active');
-
-
-        function updateDots() {
-            dots.forEach(dot => dot.classList.remove('active'));
-            dots[currentIndex].classList.add('active');
-        }
-
-        function moveToSlide(index, withAnimation = true) {
-            if (isTransitioning) return;
-            isTransitioning = true;
-            
-            currentSlideIndex = index + 1; // 실제 위치 인덱스
-            galleryWrapper.style.transition = withAnimation ? 'transform 0.5s ease-in-out' : 'none';
-            galleryWrapper.style.transform = `translateX(-${currentSlideIndex * 100}%)`;
-            currentIndex = index;
-            updateDots();
-        }
-
-        function handleNext() {
-             if (isTransitioning) return;
-            currentSlideIndex++;
-            galleryWrapper.style.transition = 'transform 0.5s ease-in-out';
-            galleryWrapper.style.transform = `translateX(-${currentSlideIndex * 100}%)`;
-            
-            currentIndex = (currentIndex + 1) % realSlideCount;
-            updateDots();
-        }
-
-        function handlePrev() {
-            if (isTransitioning) return;
-            currentSlideIndex--;
-            galleryWrapper.style.transition = 'transform 0.5s ease-in-out';
-            galleryWrapper.style.transform = `translateX(-${currentSlideIndex * 100}%)`;
-
-            currentIndex = (currentIndex - 1 + realSlideCount) % realSlideCount;
-            updateDots();
-        }
-
-        galleryWrapper.addEventListener('transitionend', () => {
-            isTransitioning = false;
-            if (currentSlideIndex === 0) { // 맨 앞 클론(마지막 슬라이드)에 도달
-                currentSlideIndex = realSlideCount;
-                galleryWrapper.style.transition = 'none';
-                galleryWrapper.style.transform = `translateX(-${currentSlideIndex * 100}%)`;
+            // 인디케이터(점) 생성
+            for (let i = 0; i < realSlideCount; i++) {
+                const dot = document.createElement('button');
+                dot.classList.add('dot');
+                dot.setAttribute('data-index', i);
+                dotsContainer.appendChild(dot);
             }
-            if (currentSlideIndex === realSlideCount + 1) { // 맨 뒤 클론(첫 슬라이드)에 도달
-                currentSlideIndex = 1;
-                galleryWrapper.style.transition = 'none';
-                galleryWrapper.style.transform = `translateX(-${currentSlideIndex * 100}%)`;
-            }
-        });
-        
-        nextButton.addEventListener('click', handleNext);
-        prevButton.addEventListener('click', handlePrev);
-        
-        dots.forEach(dot => {
-            dot.addEventListener('click', (e) => {
-                const index = parseInt(e.target.getAttribute('data-index'));
-                moveToSlide(index);
-            });
-        });
-
-        function startAutoSlide() {
-            stopAutoSlide();
-            autoSlideInterval = setInterval(handleNext, 4000);
-        }
-        function stopAutoSlide() {
-            clearInterval(autoSlideInterval);
-        }
-        
-        galleryContainer.addEventListener('mouseenter', stopAutoSlide);
-        galleryContainer.addEventListener('mouseleave', startAutoSlide);
-        
-        function handleTouchStart(e) {
-            stopAutoSlide();
-            isDragging = false;
-            touchStartX = e.touches[0].clientX;
-            galleryWrapper.style.transition = 'none'; // 드래그 중에는 애니메이션 끔
-        }
-        function handleTouchMove(e) {
-            if (touchStartX === 0) return;
-            const currentX = e.touches[0].clientX;
-            const diff = currentX - touchStartX;
-            if (Math.abs(diff) > 10) isDragging = true;
-
-            galleryWrapper.style.transform = `translateX(calc(-${currentSlideIndex * 100}% + ${diff}px))`;
-        }
-        function handleTouchEnd(e) {
-            if (touchStartX === 0) return;
-            const touchEndX = e.changedTouches[0].clientX;
-            const diff = touchEndX - touchStartX;
-            const swipeThreshold = 50;
+            const dots = document.querySelectorAll('.dot');
             
-            if (Math.abs(diff) > swipeThreshold) {
-                if (diff < 0) { // swipe left
-                    handleNext();
-                } else { // swipe right
-                    handlePrev();
-                }
-            } else { // 임계값 미만이면 원래 위치로
+            function updateDots() {
+                dots.forEach(dot => dot.classList.remove('active'));
+                dots[currentIndex].classList.add('active');
+            }
+            
+            function moveTo(index, withAnimation = true) {
+                if (isTransitioning) return;
+                isTransitioning = withAnimation;
+                
+                currentIndex = index;
+                currentSlideIndexWithClones = currentIndex + 1;
+                galleryWrapper.style.transition = withAnimation ? 'transform 0.5s ease-in-out' : 'none';
+                galleryWrapper.style.transform = `translateX(-${currentSlideIndexWithClones * 100}%)`;
+                updateDots();
+            }
+
+            function handleNext() {
+                if (isTransitioning) return;
+                currentSlideIndexWithClones++;
+                isTransitioning = true;
                 galleryWrapper.style.transition = 'transform 0.5s ease-in-out';
-                galleryWrapper.style.transform = `translateX(-${currentSlideIndex * 100}%)`;
+                galleryWrapper.style.transform = `translateX(-${currentSlideIndexWithClones * 100}%)`;
+                currentIndex = (currentIndex + 1) % realSlideCount;
+                updateDots();
             }
-            startAutoSlide();
-            touchStartX = 0;
-            setTimeout(() => { isDragging = false; }, 100);
-        }
 
-        galleryContainer.addEventListener('touchstart', handleTouchStart, { passive: true });
-        galleryContainer.addEventListener('touchmove', handleTouchMove, { passive: true });
-        galleryContainer.addEventListener('touchend', handleTouchEnd);
+            function handlePrev() {
+                if (isTransitioning) return;
+                currentSlideIndexWithClones--;
+                isTransitioning = true;
+                galleryWrapper.style.transition = 'transform 0.5s ease-in-out';
+                galleryWrapper.style.transform = `translateX(-${currentSlideIndexWithClones * 100}%)`;
+                currentIndex = (currentIndex - 1 + realSlideCount) % realSlideCount;
+                updateDots();
+            }
 
-        // 라이트박스
-        document.querySelectorAll('.gallery-slide img').forEach(img => {
-            img.addEventListener('click', (e) => {
-                if (isDragging) return;
-                lightboxModal.style.display = 'flex';
-                lightboxImage.src = e.target.src;
+            galleryWrapper.addEventListener('transitionend', () => {
+                isTransitioning = false;
+                if (currentSlideIndexWithClones === 0) {
+                    moveTo(realSlideCount - 1, false);
+                }
+                if (currentSlideIndexWithClones === realSlideCount + 1) {
+                    moveTo(0, false);
+                }
             });
-        });
 
-        startAutoSlide();
+            nextButton.addEventListener('click', handleNext);
+            prevButton.addEventListener('click', handlePrev);
+            
+            dots.forEach(dot => {
+                dot.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.getAttribute('data-index'));
+                    moveTo(index);
+                });
+            });
+
+            function startAutoSlide() {
+                stopAutoSlide();
+                autoSlideInterval = setInterval(handleNext, 4000);
+            }
+            function stopAutoSlide() {
+                clearInterval(autoSlideInterval);
+            }
+            
+            galleryContainer.addEventListener('mouseenter', stopAutoSlide);
+            galleryContainer.addEventListener('mouseleave', startAutoSlide);
+            
+            function handleTouchStart(e) {
+                stopAutoSlide();
+                isDragging = false;
+                touchStartX = e.touches[0].clientX;
+            }
+            function handleTouchEnd(e) {
+                if (touchStartX === 0) return;
+                const touchEndX = e.changedTouches[0].clientX;
+                const swipeDistance = touchStartX - touchEndX;
+                const swipeThreshold = 50;
+                
+                if (Math.abs(swipeDistance) > swipeThreshold) {
+                    if (swipeDistance > 0) handleNext();
+                    else handlePrev();
+                }
+                
+                startAutoSlide();
+                touchStartX = 0;
+                setTimeout(() => { isDragging = false; }, 100);
+            }
+
+            galleryContainer.addEventListener('touchstart', handleTouchStart, { passive: true });
+            galleryContainer.addEventListener('touchend', handleTouchEnd);
+            
+            document.querySelectorAll('.gallery-slide img').forEach(img => {
+                img.addEventListener('click', (e) => {
+                    if (isDragging) return;
+                    lightboxModal.style.display = 'flex';
+                    lightboxImage.src = e.target.src;
+                });
+            });
+            
+            moveTo(0, false); // 초기 위치 설정
+            startAutoSlide();
+        }
     }
     
     // 라이트박스 닫기
@@ -207,34 +201,74 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target === lightboxModal) closeLightbox();
     });
 
+    // 캘린더 기능
+    if(addToCalendarBtn) {
+        addToCalendarBtn.addEventListener('click', () => {
+            const toICSFormat = (dateStr) => {
+                const date = new Date(dateStr);
+                const timezoneOffset = date.getTimezoneOffset() * 60000;
+                const dateInKST = new Date(date.getTime() - timezoneOffset);
+                return dateInKST.toISOString().replace(/-|:|\.\d+/g, "");
+            };
+            const icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nUID:${new Date().getTime()}@my-wedding.com\nDTSTAMP:${toICSFormat(new Date().toString())}\nDTSTART;TZID=Asia/Seoul:${toICSFormat(weddingInfo.start)}\nDTEND;TZID=Asia/Seoul:${toICSFormat(weddingInfo.end)}\nSUMMARY:${weddingInfo.title}\nDESCRIPTION:${weddingInfo.description}\nLOCATION:${weddingInfo.locationAddress}\nEND:VEVENT\nEND:VCALENDAR`;
+            const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'wedding.ics';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    }
+
+    // 길찾기 기능
+    if (kakaomapDirectionBtn && navermapDirectionBtn) {
+        const getDirections = (mapType) => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((position) => {
+                    const { latitude, longitude } = position.coords;
+                    let url = '';
+                    if (mapType === 'kakao') {
+                        url = `https://map.kakao.com/link/to/${weddingInfo.locationName},${weddingInfo.lat},${weddingInfo.lng}`;
+                    } else if (mapType === 'naver') {
+                        url = `https://map.naver.com/v5/directions/${longitude},${latitude},현위치/${weddingInfo.lng},${weddingInfo.lat},${weddingInfo.locationName}/transit`;
+                    }
+                    window.open(url, '_blank');
+                }, (error) => {
+                    console.error(error);
+                    alert('위치 정보를 가져올 수 없습니다. 목적지만 표시할게요.');
+                    let fallbackUrl = '';
+                     if (mapType === 'kakao') {
+                        fallbackUrl = `https://map.kakao.com/link/map/${weddingInfo.locationName},${weddingInfo.lat},${weddingInfo.lng}`;
+                    } else if (mapType === 'naver') {
+                        fallbackUrl = `https://map.naver.com/v5/search/${weddingInfo.locationName}`;
+                    }
+                    window.open(fallbackUrl, '_blank');
+                });
+            } else {
+                alert('이 브라우저에서는 위치 정보 기능을 지원하지 않습니다.');
+            }
+        };
+        kakaomapDirectionBtn.addEventListener('click', () => getDirections('kakao'));
+        navermapDirectionBtn.addEventListener('click', () => getDirections('naver'));
+    }
+
     // 댓글 렌더링
     function renderComments() {
         commentList.innerHTML = '';
         const startIndex = (currentPage - 1) * COMMENTS_PER_PAGE;
         const endIndex = startIndex + COMMENTS_PER_PAGE;
         const commentsToRender = allComments.slice(startIndex, endIndex);
-
         if (commentsToRender.length === 0 && currentPage === 1) {
-            commentList.innerHTML = '<p style="text-align:center; padding: 2rem 0; color:#999;">아직 등록된 축하 메시지가 없습니다. 첫 번째 메시지를 남겨주세요!</p>';
+            commentList.innerHTML = '<p style="text-align:center; padding: 2rem 0; color:#999;">아직 등록된 축하 메시지가 없습니다.</p>';
             return;
         }
-        
         commentsToRender.forEach(comment => {
             const item = document.createElement('div');
             item.className = 'comment-item';
             const date = new Date(comment.timestamp);
             const formattedDate = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
-            
-            item.innerHTML = `
-                <div class="comment-header">
-                    <strong>${escapeHtml(comment.name)}</strong>
-                    <div class="comment-meta">
-                        <span>${formattedDate}</span>
-                        <button class="btn-delete" data-row-index="${comment.rowIndex}">삭제</button>
-                    </div>
-                </div>
-                <p class="comment-body">${escapeHtml(comment.content)}</p>
-            `;
+            item.innerHTML = `<div class="comment-header"><strong>${escapeHtml(comment.name)}</strong><div class="comment-meta"><span>${formattedDate}</span><button class="btn-delete" data-row-index="${comment.rowIndex}">삭제</button></div></div><p class="comment-body">${escapeHtml(comment.content)}</p>`;
             commentList.appendChild(item);
         });
     }
@@ -243,6 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function setupPagination() {
         paginationContainer.innerHTML = '';
         const pageCount = Math.ceil(allComments.length / COMMENTS_PER_PAGE);
+        if (pageCount <= 1) return;
         for (let i = 1; i <= pageCount; i++) {
             const btn = document.createElement('button');
             btn.innerText = i;
@@ -257,19 +292,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 댓글 불러오기 (Fetch) - 로딩 로직 수정
+    // 댓글 불러오기 (Fetch)
     async function fetchComments() {
         loaderContainer.style.display = 'flex';
         commentList.style.display = 'none';
         paginationContainer.style.display = 'none';
-
         try {
-            if (!GUESTBOOK_API_URL.startsWith('https://')) {
-                throw new Error("API 주소가 설정되지 않았습니다.");
-            }
+            if (!GUESTBOOK_API_URL.startsWith('https://')) throw new Error("API 주소가 설정되지 않았습니다.");
             const response = await fetch(GUESTBOOK_API_URL);
             if (!response.ok) throw new Error(`서버 응답 오류: ${response.status}`);
-            
             const data = await response.json();
             if (data.result === 'success') {
                 allComments = data.comments || [];
@@ -294,31 +325,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const nameInput = document.getElementById('comment-name');
         const passwordInput = document.getElementById('comment-password');
         const contentInput = document.getElementById('comment-text');
-
-        const newComment = {
-            name: nameInput.value.trim(),
-            password: passwordInput.value,
-            content: contentInput.value.trim(),
-        };
-
+        const newComment = { name: nameInput.value.trim(), password: passwordInput.value, content: contentInput.value.trim() };
         if (!newComment.name || !newComment.password || !newComment.content) {
             alert('이름, 비밀번호, 내용을 모두 입력해주세요.');
             return;
         }
-
         try {
             submitButton.disabled = true;
             submitButton.innerText = '등록 중...';
-            
-            const response = await fetch(GUESTBOOK_API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify(newComment),
-            });
-
+            const response = await fetch(GUESTBOOK_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(newComment) });
             if (!response.ok) throw new Error(`서버 응답 오류: ${response.status}`);
             const result = await response.json();
-
             if (result.result === 'success') {
                 alert('소중한 메시지가 등록되었습니다. 감사합니다!');
                 commentForm.reset();
@@ -339,32 +356,18 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleDeleteComment(deleteButton) {
         const rowIndex = deleteButton.getAttribute('data-row-index');
         const password = prompt('댓글 작성 시 입력했던 비밀번호를 입력하세요.');
-
         if (password === null) return;
         if (!password) {
             alert('비밀번호를 입력해야 삭제할 수 있습니다.');
             return;
         }
-
-        const deleteRequest = {
-            action: 'delete',
-            rowIndex: rowIndex,
-            password: password
-        };
-        
+        const deleteRequest = { action: 'delete', rowIndex: rowIndex, password: password };
         try {
             deleteButton.innerText = '삭제 중...';
             deleteButton.disabled = true;
-
-            const response = await fetch(GUESTBOOK_API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify(deleteRequest),
-            });
-            
+            const response = await fetch(GUESTBOOK_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(deleteRequest) });
             if (!response.ok) throw new Error(`서버 응답 오류: ${response.status}`);
             const result = await response.json();
-
             if (result.result === 'success') {
                 alert(result.message);
                 fetchComments();
@@ -388,7 +391,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 이벤트 리스너 (Event Listeners) ---
     commentForm.addEventListener('submit', handleFormSubmit);
-
     commentList.addEventListener('click', function(e) {
         if (e.target && e.target.classList.contains('btn-delete')) {
             handleDeleteComment(e.target);
