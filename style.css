@@ -1,17 +1,11 @@
-/* ★★★ 눈누(Noonnu)를 통해 글자 깨짐 없는 폰트를 불러옵니다 ★★★ */
-@import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/MaruBuri-Regular.woff');
-@import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/GowunDodum-Regular.woff');
-
-
 /* 기본 스타일 & CSS 변수 */
 :root {
     --bg-color: #FFF8F0;
     --text-color: #5D4037;
     --primary-color: #D4B2A3;
     --secondary-color: #EAE0D5;
-    /* ★★★ 폰트 변수를 다시 '마루 부리'와 '고운 돋움'으로 변경 ★★★ */
-    --font-heading: 'MaruBuri-Regular', serif;
-    --font-body: 'GowunDodum-Regular', sans-serif;
+    --font-heading: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+    --font-body: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
 }
 
 * {
@@ -37,7 +31,7 @@ body {
 
 h2 {
     font-family: var(--font-heading);
-    font-weight: normal; /* MaruBuri는 자체 굵기가 있으므로 normal로 설정 */
+    font-weight: 600;
     font-size: 1.8rem;
     margin-bottom: 1.5rem;
     color: var(--text-color);
@@ -89,33 +83,6 @@ section {
     font-size: 1.1rem;
     line-height: 1.6;
 }
-
-/* 캘린더 추가 버튼 */
-.calendar-buttons {
-    margin-top: 2rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.8rem;
-}
-.btn-calendar {
-    font-family: var(--font-body);
-    font-size: 0.9rem;
-    background-color: transparent;
-    color: var(--text-color);
-    border: 1px solid var(--secondary-color);
-    padding: 0.7rem 1.2rem;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    width: 80%;
-    max-width: 300px;
-}
-.btn-calendar:hover {
-    background-color: var(--secondary-color);
-    border-color: var(--primary-color);
-}
-
 
 /* 초대 문구 */
 .invitation-text p {
@@ -196,7 +163,7 @@ section {
     bottom: 10px;
     left: 50%;
     transform: translateX(-50%);
-    background-color: rgba(0, 0, 0, 0.25); /* 블러 효과 대신 배경색 명도만 살짝 조절 */
+    background-color: rgba(0, 0, 0, 0.25);
     padding: 8px 12px;
     border-radius: 20px;
     display: flex;
@@ -249,30 +216,6 @@ section {
     width: 100%;
     height: 350px;
     border: 0;
-}
-.location__buttons {
-    margin-top: 1.5rem;
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-}
-.btn-direction {
-    font-family: var(--font-body);
-    text-decoration: none;
-    padding: 0.8rem 1rem;
-    border: 1px solid var(--primary-color);
-    background: var(--primary-color);
-    color: white;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    font-size: 1rem;
-    flex-grow: 1;
-    max-width: 250px;
-}
-.btn-direction:hover {
-    background: #c5a394;
-    border-color: #c5a394;
 }
 
 /* 마음 전하실 곳 */
@@ -467,11 +410,9 @@ section {
     100% { transform: rotate(360deg); }
 }
 
-
-/* ★★★ 반응형 웹 디자인: PC 화면을 위한 깔끔한 스타일 ★★★ */
+/* 반응형 웹 디자인 */
 @media (min-width: 768px) {
     .container {
-        /* PC에서 보기 좋도록 위아래 여백과 은은한 그림자를 줍니다. */
         margin: 3rem auto;
         border-radius: 8px;
         box-shadow: 0 5px 25px rgba(0, 0, 0, 0.07);

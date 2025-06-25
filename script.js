@@ -76,6 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const dots = document.querySelectorAll('.dot');
             
             function updateDots() {
+                if (!dots.length) return;
                 dots.forEach(dot => dot.classList.remove('active'));
                 dots[currentIndex].classList.add('active');
             }
