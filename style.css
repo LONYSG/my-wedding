@@ -105,7 +105,6 @@ section {
     width: 100px;
 }
 
-
 /* 갤러리 */
 .gallery { background-color: var(--bg-color); }
 .gallery__grid {
@@ -129,6 +128,7 @@ section {
 /* 위치 */
 .location__info {
     line-height: 1.8;
+    margin-bottom: 1.5rem;
 }
 .location__info strong {
     font-family: var(--font-heading);
@@ -324,7 +324,7 @@ section {
     cursor: pointer;
 }
 
-/* ★★★ 로딩 애니메이션 스타일 ★★★ */
+/* 로딩 애니메이션 스타일 */
 .loader-container {
     display: none; /* 평소에는 숨겨 둠 */
     justify-content: center;

@@ -9,13 +9,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const commentList = document.getElementById('comment-list');
     const paginationContainer = document.getElementById('pagination');
     const submitButton = document.getElementById('submit-button');
-    const loaderContainer = document.getElementById('loader-container'); // ★★★ 이 줄 추가 ★★★
+    const loaderContainer = document.getElementById('loader-container');
     const copyButtons = document.querySelectorAll('.btn-copy');
     const galleryItems = document.querySelectorAll('.gallery__item img');
     const lightboxModal = document.getElementById('lightbox-modal');
     const lightboxImage = document.getElementById('lightbox-image');
     const lightboxClose = document.querySelector('.lightbox-close');
-    // in script.js
 
     // --- 상태 관리 (State) ---
     let allComments = [];
@@ -56,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target === lightboxModal) closeLightbox();
     });
 
-    // 댓글 렌더링 (삭제 버튼 추가)
+    // 댓글 렌더링
     function renderComments() {
         commentList.innerHTML = '';
         const startIndex = (currentPage - 1) * COMMENTS_PER_PAGE;
@@ -106,39 +105,36 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 댓글 불러오기 (Fetch)
+    // (수정) 댓글 불러오기 (Fetch) - 로딩 로직 수정
     async function fetchComments() {
-        // ★★★ 로딩 시작 ★★★
-        loaderContainer.style.display = 'flex'; // 로더 보이기
-        commentList.style.display = 'none';     // 기존 댓글 목록 숨기기
-        paginationContainer.style.display = 'none'; // 기존 페이지 버튼 숨기기
-
-        if (!GUESTBOOK_API_URL.startsWith('https://')) {
-            console.warn("방명록 API 주소가 설정되지 않았습니다.");
-            loaderContainer.style.display = 'none'; // 로더 숨기기
-            renderComments(); // 비어있는 상태로 렌더링
-            return;
-        }
+        loaderContainer.style.display = 'flex';
+        commentList.style.display = 'none';
+        paginationContainer.style.display = 'none';
 
         try {
+            if (!GUESTBOOK_API_URL.startsWith('https://')) {
+                throw new Error("API 주소가 설정되지 않았습니다.");
+            }
             const response = await fetch(GUESTBOOK_API_URL);
+            if (!response.ok) throw new Error(`서버 응답 오류: ${response.status}`);
+            
             const data = await response.json();
             if (data.result === 'success') {
                 allComments = data.comments || [];
+                // 성공했을 때만 여기서 렌더링
+                renderComments();
+                setupPagination();
             } else {
                 throw new Error(data.message);
             }
         } catch (error) {
             console.error("댓글 로딩 실패:", error);
-            commentList.innerHTML = '<p style="text-align:center; padding: 2rem 0; color:red;">댓글을 불러오는 중 오류가 발생했습니다.</p>';
+            commentList.innerHTML = `<p style="text-align:center; padding: 2rem 0; color:red;">댓글을 불러오는 중 오류가 발생했습니다.<br>${error.message}</p>`;
         } finally {
-            // ★★★ 로딩 종료 ★★★
-            // 성공하든 실패하든 항상 실행되는 부분
-            loaderContainer.style.display = 'none';    // 로더 숨기기
-            commentList.style.display = 'block';     // 댓글 목록 보이기
-            paginationContainer.style.display = 'flex'; // 페이지 버튼 보이기
-            renderComments();
-            setupPagination();
+            // 성공하든 실패하든 항상 실행
+            loaderContainer.style.display = 'none';
+            commentList.style.display = 'block';
+            paginationContainer.style.display = 'flex';
         }
     }
     
@@ -163,19 +159,21 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             submitButton.disabled = true;
             submitButton.innerText = '등록 중...';
-
+            
+            // preflight을 발생시키지 않는 text/plain 타입을 사용합니다.
             const response = await fetch(GUESTBOOK_API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify(newComment),
             });
 
+            if (!response.ok) throw new Error(`서버 응답 오류: ${response.status}`);
             const result = await response.json();
 
             if (result.result === 'success') {
                 alert('소중한 메시지가 등록되었습니다. 감사합니다!');
                 commentForm.reset();
-                fetchComments();
+                fetchComments(); // 성공 후 목록 새로고침
             } else {
                 throw new Error(result.message || '알 수 없는 오류');
             }
@@ -194,7 +192,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const password = prompt('댓글 작성 시 입력했던 비밀번호를 입력하세요.');
 
         if (password === null) return;
-
         if (!password) {
             alert('비밀번호를 입력해야 삭제할 수 있습니다.');
             return;
@@ -215,7 +212,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify(deleteRequest),
             });
-
+            
+            if (!response.ok) throw new Error(`서버 응답 오류: ${response.status}`);
             const result = await response.json();
 
             if (result.result === 'success') {
@@ -227,8 +225,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error("삭제 실패:", error);
             alert("삭제 중 오류가 발생했습니다: " + error.message);
-        } finally {
-             // finally에서는 버튼을 다시 활성화하지 않습니다. 어차피 목록이 새로고침되면서 버튼이 다시 그려지기 때문입니다.
+            // 에러가 나면 버튼을 원래대로 되돌립니다.
+            deleteButton.innerText = '삭제';
+            deleteButton.disabled = false;
         }
     }
 
