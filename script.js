@@ -41,78 +41,163 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 가로 스크롤 갤러리 (터치 스와이프 포함)
+    // 가로 스크롤 갤러리 (모든 기능 최종판)
     const galleryContainer = document.querySelector('.gallery-container');
-    if (galleryContainer) { // 갤러리 요소가 있을 때만 실행
+    if (galleryContainer) {
         const galleryWrapper = document.querySelector('.gallery-wrapper');
-        const gallerySlides = document.querySelectorAll('.gallery-slide');
+        const slides = document.querySelectorAll('.gallery-slide');
         const prevButton = document.getElementById('gallery-prev');
         const nextButton = document.getElementById('gallery-next');
+        const dotsContainer = document.getElementById('gallery-dots');
+        
         let currentIndex = 0;
-        const slideCount = gallerySlides.length;
+        let realSlideCount = slides.length;
+        let autoSlideInterval = null;
+        let isTransitioning = false;
         let touchStartX = 0;
         let isDragging = false;
 
-        function showSlide(index) {
-            if (index >= slideCount) {
-                currentIndex = 0;
-            } else if (index < 0) {
-                currentIndex = slideCount - 1;
-            } else {
-                currentIndex = index;
-            }
-            const offset = -currentIndex * 100;
-            galleryWrapper.style.transform = `translateX(${offset}%)`;
+        // 무한 루프를 위한 클론 생성
+        const firstClone = slides[0].cloneNode(true);
+        const lastClone = slides[realSlideCount - 1].cloneNode(true);
+        galleryWrapper.appendChild(firstClone);
+        galleryWrapper.insertBefore(lastClone, slides[0]);
+
+        // 인디케이터(점) 생성
+        for (let i = 0; i < realSlideCount; i++) {
+            const dot = document.createElement('button');
+            dot.classList.add('dot');
+            dot.setAttribute('data-index', i);
+            dotsContainer.appendChild(dot);
+        }
+        const dots = document.querySelectorAll('.dot');
+        
+        // 초기 위치 설정 (애니메이션 없이)
+        let currentSlideIndex = 1; // 클론 포함한 인덱스
+        galleryWrapper.style.transform = `translateX(-${currentSlideIndex * 100}%)`;
+        dots[0].classList.add('active');
+
+
+        function updateDots() {
+            dots.forEach(dot => dot.classList.remove('active'));
+            dots[currentIndex].classList.add('active');
         }
 
+        function moveToSlide(index, withAnimation = true) {
+            if (isTransitioning) return;
+            isTransitioning = true;
+            
+            currentSlideIndex = index + 1; // 실제 위치 인덱스
+            galleryWrapper.style.transition = withAnimation ? 'transform 0.5s ease-in-out' : 'none';
+            galleryWrapper.style.transform = `translateX(-${currentSlideIndex * 100}%)`;
+            currentIndex = index;
+            updateDots();
+        }
+
+        function handleNext() {
+             if (isTransitioning) return;
+            currentSlideIndex++;
+            galleryWrapper.style.transition = 'transform 0.5s ease-in-out';
+            galleryWrapper.style.transform = `translateX(-${currentSlideIndex * 100}%)`;
+            
+            currentIndex = (currentIndex + 1) % realSlideCount;
+            updateDots();
+        }
+
+        function handlePrev() {
+            if (isTransitioning) return;
+            currentSlideIndex--;
+            galleryWrapper.style.transition = 'transform 0.5s ease-in-out';
+            galleryWrapper.style.transform = `translateX(-${currentSlideIndex * 100}%)`;
+
+            currentIndex = (currentIndex - 1 + realSlideCount) % realSlideCount;
+            updateDots();
+        }
+
+        galleryWrapper.addEventListener('transitionend', () => {
+            isTransitioning = false;
+            if (currentSlideIndex === 0) { // 맨 앞 클론(마지막 슬라이드)에 도달
+                currentSlideIndex = realSlideCount;
+                galleryWrapper.style.transition = 'none';
+                galleryWrapper.style.transform = `translateX(-${currentSlideIndex * 100}%)`;
+            }
+            if (currentSlideIndex === realSlideCount + 1) { // 맨 뒤 클론(첫 슬라이드)에 도달
+                currentSlideIndex = 1;
+                galleryWrapper.style.transition = 'none';
+                galleryWrapper.style.transform = `translateX(-${currentSlideIndex * 100}%)`;
+            }
+        });
+        
+        nextButton.addEventListener('click', handleNext);
+        prevButton.addEventListener('click', handlePrev);
+        
+        dots.forEach(dot => {
+            dot.addEventListener('click', (e) => {
+                const index = parseInt(e.target.getAttribute('data-index'));
+                moveToSlide(index);
+            });
+        });
+
+        function startAutoSlide() {
+            stopAutoSlide();
+            autoSlideInterval = setInterval(handleNext, 4000);
+        }
+        function stopAutoSlide() {
+            clearInterval(autoSlideInterval);
+        }
+        
+        galleryContainer.addEventListener('mouseenter', stopAutoSlide);
+        galleryContainer.addEventListener('mouseleave', startAutoSlide);
+        
         function handleTouchStart(e) {
+            stopAutoSlide();
             isDragging = false;
             touchStartX = e.touches[0].clientX;
+            galleryWrapper.style.transition = 'none'; // 드래그 중에는 애니메이션 끔
         }
-
         function handleTouchMove(e) {
             if (touchStartX === 0) return;
-            const touchEndX = e.touches[0].clientX;
-            // 스와이프 중임을 판단하기 위해 isDragging을 즉시 true로 설정
-            if (Math.abs(touchStartX - touchEndX) > 10) { // 약간의 움직임에도 드래그로 간주
-                 isDragging = true;
-            }
-        }
+            const currentX = e.touches[0].clientX;
+            const diff = currentX - touchStartX;
+            if (Math.abs(diff) > 10) isDragging = true;
 
+            galleryWrapper.style.transform = `translateX(calc(-${currentSlideIndex * 100}% + ${diff}px))`;
+        }
         function handleTouchEnd(e) {
             if (touchStartX === 0) return;
             const touchEndX = e.changedTouches[0].clientX;
-            const swipeDistance = touchStartX - touchEndX;
+            const diff = touchEndX - touchStartX;
             const swipeThreshold = 50;
-
-            if (swipeDistance > swipeThreshold) {
-                showSlide(currentIndex + 1);
-            } else if (swipeDistance < -swipeThreshold) {
-                showSlide(currentIndex - 1);
-            }
             
-            touchStartX = 0; // 초기화
-            // isDragging을 false로 리셋하여 다음 클릭 이벤트를 위해 준비
-            // 바로 false로 바꾸면 click 이벤트가 먼저 실행될 수 있어 약간의 딜레이를 줌
+            if (Math.abs(diff) > swipeThreshold) {
+                if (diff < 0) { // swipe left
+                    handleNext();
+                } else { // swipe right
+                    handlePrev();
+                }
+            } else { // 임계값 미만이면 원래 위치로
+                galleryWrapper.style.transition = 'transform 0.5s ease-in-out';
+                galleryWrapper.style.transform = `translateX(-${currentSlideIndex * 100}%)`;
+            }
+            startAutoSlide();
+            touchStartX = 0;
             setTimeout(() => { isDragging = false; }, 100);
         }
 
-        prevButton.addEventListener('click', () => showSlide(currentIndex - 1));
-        nextButton.addEventListener('click', () => showSlide(currentIndex + 1));
         galleryContainer.addEventListener('touchstart', handleTouchStart, { passive: true });
         galleryContainer.addEventListener('touchmove', handleTouchMove, { passive: true });
         galleryContainer.addEventListener('touchend', handleTouchEnd);
-        
-        gallerySlides.forEach(slide => {
-            slide.querySelector('img').addEventListener('click', (e) => {
-                if (isDragging) {
-                    e.preventDefault(); // 스와이프 후 클릭 방지
-                    return;
-                }
+
+        // 라이트박스
+        document.querySelectorAll('.gallery-slide img').forEach(img => {
+            img.addEventListener('click', (e) => {
+                if (isDragging) return;
                 lightboxModal.style.display = 'flex';
                 lightboxImage.src = e.target.src;
             });
         });
+
+        startAutoSlide();
     }
     
     // 라이트박스 닫기
